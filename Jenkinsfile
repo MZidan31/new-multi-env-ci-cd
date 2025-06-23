@@ -30,40 +30,24 @@ pipeline {
             }
         }
 
-        // Tahap 2: Build dan Push Docker Image
+        // Tahap 2: Build dan Push Image Docker
         // Membangun image Docker dari Dockerfile dan mendorongnya ke Docker Hub.
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // --- PERBAIKAN: Memastikan Docker CLI terinstal dengan izin 'root' untuk apt-get ---
-                    sh (script: '''
-                        # Memeriksa apakah perintah 'docker' sudah ada
-                        if ! command -v docker &> /dev/null
-                        then
-                            echo "Docker CLI tidak ditemukan, menginstal sebagai root..."
-                            # Menggunakan apt-get update dan install sebagai root
-                            apt-get update && apt-get install -y docker.io
-                        else
-                            echo "Docker CLI sudah terinstal."
-                        fi
-                    ''', user: 'root') // <--- PENTING: Menjalankan blok ini sebagai user 'root'
-                    // --- AKHIR PERBAIKAN ---
-
                     def imageTag // Variabel untuk menyimpan tag image Docker
 
                     // Menentukan tag image berdasarkan pemicu pipeline (branch 'main' atau tag Git).
                     if (env.BRANCH_NAME == 'main') {
-                        imageTag = "latest" // Jika dari branch 'main', gunakan tag 'latest'
+                        imageTag = "latest" // Untuk branch main, gunakan tag 'latest'
                     } else if (env.TAG_NAME) {
-                        imageTag = env.TAG_NAME // Jika dari tag Git (misal: v1.0.0), gunakan nama tag tersebut
+                        imageTag = env.TAG_NAME // Jika ini adalah tag Git, gunakan nama tag sebagai tag image
                     } else {
-                        // Fallback jika bukan branch 'main' dan bukan tag (misal: branch fitur lainnya)
-                        imageTag = "dev-${env.BUILD_NUMBER}" // Gunakan 'dev-' dan nomor build Jenkins
+                        // Fallback jika tidak ada branch atau tag yang cocok (misalnya, branch lain)
+                        imageTag = "dev-${env.BUILD_NUMBER}"
                     }
 
                     // Menggunakan kredensial Docker Hub untuk login.
-                    // Perintah docker login, docker build, dan docker push akan dijalankan oleh user Jenkins biasa
-                    // karena mereka tidak membutuhkan akses root setelah docker CLI terinstal.
                     withCredentials([usernamePassword(credentialsId: env.DOCKER_CRED_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         // Login ke Docker Hub menggunakan kredensial yang diambil.
                         sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin"
@@ -146,6 +130,7 @@ pipeline {
 
                     // Menggunakan file kubeconfig untuk berinteraksi dengan Kubernetes.
                     withCredentials([file(credentialsId: env.KUBECONFIG_CRED_ID, variable: 'KUBECONFIG_FILE_PATH')]) {
+                        // Menyetel variabel lingkungan KUBECONFIG agar kubectl menggunakan file kredensial yang benar.
                         sh "export KUBECONFIG=${KUBECONFIG_FILE_PATH}"
 
                         // Menerapkan definisi namespace (jika belum ada/berubah).
@@ -176,7 +161,6 @@ pipeline {
             }
         }
     }
-
     // Bagian post-build: Akan selalu dijalankan setelah semua tahapan selesai (berhasil atau gagal).
     post {
         always {
@@ -185,3 +169,4 @@ pipeline {
         }
     }
 }
+
