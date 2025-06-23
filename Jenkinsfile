@@ -34,15 +34,15 @@ pipeline {
         // Tahap 2: Build dan Push Image Docker
         // Membangun image Docker dari Dockerfile dan mendorongnya ke Docker Hub.
         stage('Build and Push Docker Image') {
-            // PENTING: Menggunakan agen Docker khusus untuk tahap ini.
+            // PENTING: Agen Docker khusus untuk tahap ini.
             // Image 'docker:latest' adalah image resmi Docker CLI yang akan digunakan sebagai agen sementara.
-            agent {
+            agent { // <--- BLOK 'agent' DAN 'steps' HARUS BERADA DI BAWAH 'stage' DAN INDENTASI SAMA
                 docker {
                     image 'docker:latest' // Menggunakan image Docker CLI terbaru
                     args '-v /var/run/docker.sock:/var/run/docker.sock' // Me-mount docker.sock dari host ke dalam agen
                 }
             }
-            steps {
+            steps { // <--- BLOK 'steps' INI HARUS BERADA PADA LEVEL INDENTASI YANG SAMA DENGAN 'agent' DI ATASNYA
                 script {
                     def imageTag // Variabel untuk menyimpan tag image Docker
 
@@ -170,11 +170,11 @@ pipeline {
             }
         }
     }
-}
-// Bagian post-build: Akan selalu dijalankan setelah semua tahapan selesai (berhasil atau gagal).
-post {
-    always {
-        // Membersihkan workspace Jenkins setelah build selesai untuk menghemat ruang disk.
-        deleteDir()
+    // Bagian post-build: Akan selalu dijalankan setelah semua tahapan selesai (berhasil atau gagal).
+    post {
+        always {
+            // Membersihkan workspace Jenkins setelah build selesai untuk menghemat ruang disk.
+            deleteDir()
+        }
     }
 }
