@@ -1,0 +1,14 @@
+# Service untuk aplikasi di lingkungan Production
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-app-service-prod # Nama Service
+  namespace: prod # Service ini akan berada di namespace 'prod'
+spec:
+  selector:
+    app: demo-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+  type: LoadBalancer # Tipe Service LoadBalancer akan membuat load balancer eksternal di lingkungan cloud. Di Minikube, ini akan berperilaku mirip NodePort.

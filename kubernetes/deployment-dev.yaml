@@ -1,0 +1,35 @@
+# Deployment untuk aplikasi di lingkungan Development
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app-dev # Nama Deployment
+  namespace: dev # Deployment ini akan berada di namespace 'dev'
+spec:
+  replicas: 1 # Jumlah instance (pod) aplikasi di Dev
+  selector:
+    matchLabels:
+      app: demo-app # Selector untuk memilih Pod yang dikelola Deployment ini
+  template:
+    metadata:
+      labels:
+        app: demo-app # Label yang akan diterapkan pada Pod
+    spec:
+      containers:
+      - name: demo-app
+        image: masjidan/demo-app:latest # Image Docker yang akan digunakan. Untuk Dev, kita pakai 'latest'
+        ports:
+        - containerPort: 5000 # Port yang diekspos oleh container aplikasi (tempat Flask berjalan)
+        env:
+          # Mengambil nilai variabel lingkungan APP_ENV dari ConfigMap 'app-config'
+          - name: APP_ENV
+            valueFrom:
+              configMapKeyRef:
+                name: app-config
+                key: APP_ENV
+          # Mengambil nilai variabel lingkungan API_KEY dari Secret 'app-secret'
+          - name: API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: app-secret
+                key: API_KEY
+```yaml

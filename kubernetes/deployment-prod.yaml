@@ -1,0 +1,35 @@
+# Deployment untuk aplikasi di lingkungan Production
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app-prod # Nama Deployment
+  namespace: prod # Deployment ini akan berada di namespace 'prod'
+spec:
+  replicas: 3 # Jumlah instance (pod) aplikasi di Prod (biasanya lebih banyak untuk ketersediaan tinggi)
+  selector:
+    matchLabels:
+      app: demo-app
+  template:
+    metadata:
+      labels:
+        app: demo-app
+    spec:
+      containers:
+      - name: demo-app
+        image: masjidan/demo-app:TAG_NAME # Placeholder untuk tag image spesifik (akan diganti oleh Jenkins pipeline)
+        ports:
+        - containerPort: 5000
+        env:
+          # Mengambil nilai dari ConfigMap
+          - name: APP_ENV
+            valueFrom:
+              configMapKeyRef:
+                name: app-config
+                key: APP_ENV
+          # Mengambil nilai dari Secret
+          - name: API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: app-secret
+                key: API_KEY
+```yaml

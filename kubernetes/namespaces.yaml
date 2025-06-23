@@ -1,0 +1,11 @@
+# Definisi Namespace untuk lingkungan Development
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+---
+# Definisi Namespace untuk lingkungan Production
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod

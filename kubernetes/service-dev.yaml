@@ -1,0 +1,15 @@
+# Service untuk aplikasi di lingkungan Development
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-app-service-dev # Nama Service
+  namespace: dev # Service ini akan berada di namespace 'dev'
+spec:
+  selector:
+    app: demo-app # Memilih Pod dengan label 'app: demo-app'
+  ports:
+  - protocol: TCP
+    port: 80 # Port yang akan diekspos oleh Service
+    targetPort: 5000 # Port target di dalam Pod (port container)
+  type: NodePort # Tipe Service NodePort akan mengekspos aplikasi melalui port di node cluster. Cocok untuk Minikube.
+```yaml

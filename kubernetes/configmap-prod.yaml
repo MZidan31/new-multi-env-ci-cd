@@ -1,0 +1,8 @@
+# ConfigMap khusus untuk lingkungan Production
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config # Nama ConfigMap (sama dengan Dev, tapi di namespace berbeda)
+  namespace: prod # Ditempatkan di namespace 'prod'
+data:
+  APP_ENV: "Production" # Variabel lingkungan APP_ENV dengan nilai "Production"

@@ -1,0 +1,9 @@
+# ConfigMap khusus untuk lingkungan Development
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config # Nama ConfigMap
+  namespace: dev # Ditempatkan di namespace 'dev'
+data:
+  APP_ENV: "Development" # Variabel lingkungan APP_ENV dengan nilai "Development"
+```yaml
