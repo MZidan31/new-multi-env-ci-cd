@@ -2,7 +2,8 @@
 // File ini mengatur alur otomatis dari build, push image, hingga deployment ke Dev dan Prod.
 
 pipeline {
-    // Menentukan agen eksekusi pipeline. 'any' berarti Jenkins akan menggunakan agen manapun yang tersedia.
+    // Menentukan agen eksekusi pipeline default.
+    // 'any' berarti Jenkins akan menggunakan agen manapun yang tersedia (controller Jenkins itu sendiri).
     agent any
 
     // Mendefinisikan variabel lingkungan global yang akan digunakan di seluruh pipeline.
@@ -33,6 +34,14 @@ pipeline {
         // Tahap 2: Build dan Push Image Docker
         // Membangun image Docker dari Dockerfile dan mendorongnya ke Docker Hub.
         stage('Build and Push Docker Image') {
+            // PENTING: Menggunakan agen Docker khusus untuk tahap ini.
+            // Image 'docker:latest' adalah image resmi Docker CLI yang akan digunakan sebagai agen sementara.
+            agent {
+                docker {
+                    image 'docker:latest' // Menggunakan image Docker CLI terbaru
+                    args '-v /var/run/docker.sock:/var/run/docker.sock' // Me-mount docker.sock dari host ke dalam agen
+                }
+            }
             steps {
                 script {
                     def imageTag // Variabel untuk menyimpan tag image Docker
@@ -161,12 +170,11 @@ pipeline {
             }
         }
     }
-    // Bagian post-build: Akan selalu dijalankan setelah semua tahapan selesai (berhasil atau gagal).
-    post {
-        always {
-            // Membersihkan workspace Jenkins setelah build selesai untuk menghemat ruang disk.
-            deleteDir()
-        }
+}
+// Bagian post-build: Akan selalu dijalankan setelah semua tahapan selesai (berhasil atau gagal).
+post {
+    always {
+        // Membersihkan workspace Jenkins setelah build selesai untuk menghemat ruang disk.
+        deleteDir()
     }
 }
-
