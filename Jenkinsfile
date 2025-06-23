@@ -35,19 +35,26 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // --- BAGIAN BARU: Memastikan Docker CLI terinstal di agen Jenkins ---
+                    // --- PERBAIKAN: Memastikan Docker CLI terinstal dengan izin yang benar ---
                     sh '''
+                        # Memeriksa apakah 'sudo' sudah terinstal dan menginstalnya jika tidak ada
+                        if ! command -v sudo &> /dev/null
+                        then
+                            echo "sudo tidak ditemukan, menginstal..."
+                            apt-get update && apt-get install -y sudo
+                        fi
+
                         # Memeriksa apakah perintah 'docker' sudah ada
                         if ! command -v docker &> /dev/null
                         then
                             echo "Docker CLI tidak ditemukan, menginstal..."
-                            # Memperbarui daftar paket dan menginstal docker.io (Docker CLI)
-                            apt-get update && apt-get install -y docker.io
+                            # Menggunakan 'sudo' untuk apt-get update dan install agar memiliki izin yang cukup
+                            sudo apt-get update && sudo apt-get install -y docker.io
                         else
                             echo "Docker CLI sudah terinstal."
                         fi
                     '''
-                    // --- AKHIR BAGIAN BARU ---
+                    // --- AKHIR PERBAIKAN ---
 
                     def imageTag // Variabel untuk menyimpan tag image Docker
 
@@ -88,7 +95,7 @@ pipeline {
                     // Menggunakan file kubeconfig yang telah dimount ke dalam container Jenkins.
                     withCredentials([file(credentialsId: env.KUBECONFIG_CRED_ID, variable: 'KUBECONFIG_FILE_PATH')]) {
                         // Menyetel variabel lingkungan KUBECONFIG agar kubectl menggunakan file kredensial yang benar.
-                        sh "export KUBECONFIG=${KUBECONCONFIG_FILE_PATH}"
+                        sh "export KUBECONFIG=${KUBECONFIG_FILE_PATH}" 
 
                         // Menerapkan definisi namespace (jika belum ada/berubah).
                         sh "kubectl apply -f kubernetes/namespaces.yaml"
@@ -144,7 +151,7 @@ pipeline {
 
                     // Menggunakan file kubeconfig untuk berinteraksi dengan Kubernetes.
                     withCredentials([file(credentialsId: env.KUBECONFIG_CRED_ID, variable: 'KUBECONFIG_FILE_PATH')]) {
-                        sh "export KUBECONFIG=${KUBECONFIG_FILE_PATH}"
+                        sh "export KUBECONFIG=${KUBECONFIG_FILE_PATH}" 
 
                         // Menerapkan definisi namespace (jika belum ada/berubah).
                         sh "kubectl apply -f kubernetes/namespaces.yaml"
