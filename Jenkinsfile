@@ -35,6 +35,20 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
+                    // --- BAGIAN BARU: Memastikan Docker CLI terinstal di agen Jenkins ---
+                    sh '''
+                        # Memeriksa apakah perintah 'docker' sudah ada
+                        if ! command -v docker &> /dev/null
+                        then
+                            echo "Docker CLI tidak ditemukan, menginstal..."
+                            # Memperbarui daftar paket dan menginstal docker.io (Docker CLI)
+                            apt-get update && apt-get install -y docker.io
+                        else
+                            echo "Docker CLI sudah terinstal."
+                        fi
+                    '''
+                    // --- AKHIR BAGIAN BARU ---
+
                     def imageTag // Variabel untuk menyimpan tag image Docker
 
                     // Menentukan tag image berdasarkan pemicu pipeline (branch 'main' atau tag Git).
@@ -74,7 +88,7 @@ pipeline {
                     // Menggunakan file kubeconfig yang telah dimount ke dalam container Jenkins.
                     withCredentials([file(credentialsId: env.KUBECONFIG_CRED_ID, variable: 'KUBECONFIG_FILE_PATH')]) {
                         // Menyetel variabel lingkungan KUBECONFIG agar kubectl menggunakan file kredensial yang benar.
-                        sh "export KUBECONFIG=${KUBECONFIG_FILE_PATH}"
+                        sh "export KUBECONFIG=${KUBECONCONFIG_FILE_PATH}"
 
                         // Menerapkan definisi namespace (jika belum ada/berubah).
                         sh "kubectl apply -f kubernetes/namespaces.yaml"
